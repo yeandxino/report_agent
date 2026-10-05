@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>举报理由生成器</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230f766e' d='M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z'/></svg>">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #1a2332;
+    --muted: #6b7280;
+    --brand: #0f766e;
+    --brand-2: #0d9488;
+    --line: #e5e7eb;
+    --danger: #dc2626;
+  }
+  html { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; width: 100%; padding: 20px 16px 40px; flex: 1; }
+
+  header { padding: 18px 4px 20px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-badge {
+    width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px;
+    box-shadow: 0 4px 12px rgba(15,118,110,.25);
+  }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: .2px; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .card {
+    background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.05);
+    border: 1px solid var(--line);
+  }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .step-num {
+    width: 20px; height: 20px; border-radius: 50%; background: var(--brand); color: #fff;
+    font-size: 12px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+
+  label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+  label:first-of-type { margin-top: 0; }
+  textarea, input[type="text"] {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    font-size: 15px; font-family: inherit; background: #fafbfc; color: var(--ink); resize: vertical;
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  textarea:focus, input[type="text"]:focus { border-color: var(--brand-2); box-shadow: 0 0 0 3px rgba(13,148,136,.12); background: #fff; }
+  textarea { min-height: 84px; line-height: 1.6; }
+
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
+    cursor: pointer; color: #fff; margin-top: 14px;
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    box-shadow: 0 6px 16px rgba(15,118,110,.3);
+    transition: transform .12s, opacity .12s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .6; box-shadow: none; }
+  .btn .spin { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: rot .8s linear infinite; display: none; }
+  .btn.loading .spin { display: inline-block; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  .video-box { display: none; }
+  .video-box.show { display: block; }
+  .video-grid { display: grid; gap: 8px; margin-bottom: 12px; }
+  .video-item { background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; }
+  .video-item .k { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+  .video-item .v { color: var(--ink); word-break: break-all; line-height: 1.5; }
+
+  .reason-box { display: none; }
+  .reason-box.show { display: block; }
+  .reason-text {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+    font-size: 14px; line-height: 1.8; white-space: pre-wrap; word-break: break-word; color: var(--ink);
+    max-height: 60vh; overflow-y: auto;
+  }
+  .row-btn { display: flex; gap: 10px; margin-top: 12px; }
+  .btn-ghost {
+    flex: 1; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--line); background: #fff; color: var(--ink); transition: background .12s;
+  }
+  .btn-ghost:active { background: #f3f4f6; }
+
+  .msg { font-size: 13.5px; color: var(--danger); margin-top: 10px; display: none; line-height: 1.6; }
+  .msg.show { display: block; }
+  .tip { color: var(--muted); font-size: 12px; line-height: 1.7; margin-top: 10px; }
+  .tip b { color: var(--brand); }
+
+  .file-row { margin-top: 6px; }
+  .file-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 500;
+    cursor: pointer; border: 1.5px dashed var(--brand-2); background: rgba(13,148,136,.06); color: var(--brand);
+    transition: background .12s, border-color .12s;
+  }
+  .file-btn:active { background: rgba(13,148,136,.12); }
+  .file-btn.has-file { border-style: solid; background: rgba(13,148,136,.1); }
+
+  footer { text-align: center; color: #9ca3af; font-size: 12px; padding: 10px 0 30px; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101418; --card: #171c24; --ink: #e5e7eb; --muted: #9ca3af;
+      --line: #262d38; --brand: #14b8a6; --brand-2: #2dd4bf;
+    }
+    textarea, input[type="text"] { background: #101418; color: var(--ink); }
+    textarea:focus, input[type="text"]:focus { background: #141a22; }
+    .video-item, .reason-text { background: #12171f; }
+    .btn-ghost { background: #171c24; color: var(--ink); }
+    .btn-ghost:active { background: #1f2630; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="logo-badge">盾</div>
+      <div>
+        <h1>举报理由生成器</h1>
+        <div class="sub">粘贴视频/帖子链接，自动生成贴合平台规则的举报理由</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 第一步：输入 -->
+  <div class="card">
+    <div class="card-title"><span class="step-num">1</span>输入内容</div>
+    <label>视频 / 帖子链接（支持抖音、B站、小红书等）</label>
+    <input type="text" id="link" placeholder="例如 https://v.douyin.com/xxxxxx/" autocomplete="off">
+    <label>上传视频文件（可选 · 抖音等解析不到的推荐方式）</label>
+    <div class="file-row">
+      <label class="file-btn" for="fileInput">
+        <span id="fileLabel">选择视频文件（豆包 AI 自动理解内容）</span>
+      </label>
+      <input type="file" id="fileInput" accept="video/*,audio/*" hidden>
+    </div>
+    <label>视频文案 / 描述（可选，或粘贴文字补充）</label>
+    <textarea id="text" placeholder="粘贴视频的标题、文案或描述内容……"></textarea>
+    <button class="btn" id="go"><span class="spin"></span>生成举报理由</button>
+    <div class="msg" id="msg"></div>
+    <div class="tip">提示：抖音对匿名解析限制较严。若链接解析不到，<b>上传视频文件后由豆包 AI 自动理解视频画面与语音内容</b>，或直接粘贴视频文案，均可生成优质举报理由。<b>请勿用于恶意举报，仅对真实违规内容使用。</b></div>
+  </div>
+
+  <!-- 第二步：视频信息 -->
+  <div class="card video-box" id="videoCard">
+    <div class="card-title"><span class="step-num">2</span>解析到的视频信息</div>
+    <div class="video-grid" id="videoGrid"></div>
+  </div>
+
+  <!-- 第三步：举报理由 -->
+  <div class="card reason-box" id="reasonCard">
+    <div class="card-title"><span class="step-num">3</span>生成的举报理由</div>
+    <div class="reason-text" id="reasonText"></div>
+    <div class="row-btn">
+      <button class="btn-ghost" id="copy">复制举报理由</button>
+      <button class="btn-ghost" id="again">再生成一次</button>
+    </div>
+  </div>
+
+  <footer>举报理由生成 Agent · 基于 AI 与平台公开规则</footer>
+</div>
+
+<script>
+(function () {
+  const $ = function (id) { return document.getElementById(id); };
+  const msgEl = $("msg"), btn = $("go");
+  let selectedFile = null;
+
+  function showMsg(t) { msgEl.textContent = t; msgEl.classList.add("show"); }
+  function hideMsg() { msgEl.classList.remove("show"); }
+
+  // 文件选择
+  $("fileInput").addEventListener("change", function () {
+    selectedFile = this.files[0] || null;
+    const lbl = $("fileLabel");
+    if (selectedFile) {
+      lbl.textContent = "已选择：" + selectedFile.name + "（" + (selectedFile.size / 1024 / 1024).toFixed(1) + " MB）";
+      lbl.parentElement.classList.add("has-file");
+    } else {
+      lbl.textContent = "选择视频文件（豆包 AI 自动理解内容）";
+      lbl.parentElement.classList.remove("has-file");
+    }
+  });
+
+  $("go").addEventListener("click", async function () {
+    const link = $("link").value.trim();
+    const text = $("text").value.trim();
+    if (!link && !text && !selectedFile) { showMsg("请至少输入链接、粘贴文案或上传视频文件其中一项"); return; }
+    hideMsg();
+    btn.disabled = true; btn.classList.add("loading");
+    $("videoCard").classList.remove("show");
+    $("reasonCard").classList.remove("show");
+
+    try {
+      const fd = new FormData();
+      if (link) fd.append("link", link);
+      if (text) fd.append("text", text);
+      if (selectedFile) fd.append("file", selectedFile);
+
+      const resp = await fetch("/api/report", { method: "POST", body: fd });
+      const data = await resp.json();
+
+      if (!data.ok) {
+        showMsg(data.msg || "生成失败");
+        if (data.video && (data.video.title || data.video.desc)) { renderVideo(data.video); }
+        return;
+      }
+      renderVideo(data.video);
+      $("reasonText").textContent = data.reason;
+      $("reasonCard").classList.add("show");
+      $("reasonCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+      showMsg("请求失败，请确认服务已启动（python app.py）");
+    } finally {
+      btn.disabled = false; btn.classList.remove("loading");
+    }
+  });
+
+  function renderVideo(v) {
+    const grid = $("videoGrid");
+    grid.innerHTML = "";
+    const items = [
+      ["平台", v.platform || "未知"],
+      ["标题", v.title || "—"],
+      ["作者", v.author || "—"],
+      ["链接", v.link || "—"]
+    ];
+    items.forEach(function (it) {
+      const d = document.createElement("div");
+      d.className = "video-item";
+      d.innerHTML = '<div class="k">' + it[0] + '</div><div class="v">' + esc(it[1]) + '</div>';
+      grid.appendChild(d);
+    });
+    if (v.desc) {
+      const d = document.createElement("div");
+      d.className = "video-item";
+      d.innerHTML = '<div class="k">文案/描述</div><div class="v">' + esc(v.desc) + '</div>';
+      grid.appendChild(d);
+    }
+    $("videoCard").classList.add("show");
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  $("copy").addEventListener("click", function () {
+    const t = $("reasonText").textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(t).then(function () { showMsg("已复制到剪贴板"); setTimeout(hideMsg, 2000); },
+        function () { fallbackCopy(t); });
+    } else { fallbackCopy(t); }
+  });
+
+  function fallbackCopy(t) {
+    const ta = document.createElement("textarea");
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); showMsg("已复制到剪贴板"); setTimeout(hideMsg, 2000); }
+    catch (e) { showMsg("复制失败，请手动长按选择复制"); }
+    document.body.removeChild(ta);
+  }
+
+  $("again").addEventListener("click", function () {
+    $("reasonCard").classList.remove("show");
+    $("link").value = ""; $("text").value = ""; selectedFile = null;
+    $("fileInput").value = "";
+    $("fileLabel").textContent = "选择视频文件（豆包 AI 自动理解内容）";
+    $("fileLabel").parentElement.classList.remove("has-file");
+    $("link").focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+})();
+</script>
+</body>
+</html>
